@@ -17,22 +17,20 @@
 # Restrict the vendor module owners here.
 _vendor_owner_whitelist := \
         asus \
-        audience \
-        broadcom \
-        csr \
+	audience \
+	broadcom \
+	csr \
         elan \
         google \
-        imgtec \
-        invensense \
-        lge \
+	imgtec \
+	invensense \
         nvidia \
-        nxp \
-        qcom \
-        samsung \
-        samsung_arm \
-        ti \
+	nxp \
+	samsung \
+	samsung_arm \
+	ti \
         trusted_logic \
-        widevine
+	widevine
 
 
 ifneq (,$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_RESTRICT_VENDOR_FILES))
@@ -40,32 +38,25 @@ ifneq (,$(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_RESTRICT_VENDOR_FILES))
 _vendor_check_modules := $(sort $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_PACKAGES))
 $(call expand-required-modules,_vendor_check_modules,$(_vendor_check_modules))
 
-_vendor_module_owner_info :=
 # Restrict owners
-ifneq (,$(filter true owner all, $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_RESTRICT_VENDOR_FILES)))
+#ifneq (,$(filter true owner all, $(PRODUCTS.$(INTERNAL_PRODUCT).PRODUCT_RESTRICT_VENDOR_FILES)))
 
-ifneq (,$(filter vendor/%, $(PRODUCT_PACKAGE_OVERLAYS) $(DEVICE_PACKAGE_OVERLAYS)))
-$(error Error: Product "$(TARGET_PRODUCT)" cannot have overlay in vendor tree: \
-    $(filter vendor/%, $(PRODUCT_PACKAGE_OVERLAYS) $(DEVICE_PACKAGE_OVERLAYS)))
-endif
-_vendor_check_copy_files := $(filter vendor/%, $(PRODUCT_COPY_FILES))
-ifneq (,$(_vendor_check_copy_files))
-$(foreach c, $(_vendor_check_copy_files), \
-  $(if $(filter $(_vendor_owner_whitelist), $(call word-colon,3,$(c))),,\
-    $(error Error: vendor PRODUCT_COPY_FILES file "$(c)" has unknown owner))\
-  $(eval _vendor_module_owner_info += $(call word-colon,2,$(c)):$(call word-colon,3,$(c))))
-endif
-_vendor_check_copy_files :=
+#ifneq (,$(filter vendor/%, $(PRODUCT_PACKAGE_OVERLAYS) $(DEVICE_PACKAGE_OVERLAYS)))
+#$(error Error: Product "$(TARGET_PRODUCT)" can not have overlay in vendor tree: \
+#    $(filter vendor/%, $(PRODUCT_PACKAGE_OVERLAYS) $(DEVICE_PACKAGE_OVERLAYS)))
+#endif
+#ifneq (,$(filter vendor/%, $(PRODUCT_COPY_FILES)))
+#$(error Error: Product "$(TARGET_PRODUCT)" can not have PRODUCT_COPY_FILES from vendor tree: \
+#    $(filter vendor/%, $(PRODUCT_COPY_FILES)))
+#endif
 
-$(foreach m, $(_vendor_check_modules), \
-  $(if $(filter vendor/%, $(ALL_MODULES.$(m).PATH)),\
-    $(if $(filter $(_vendor_owner_whitelist), $(ALL_MODULES.$(m).OWNER)),,\
-      $(error Error: vendor module "$(m)" in $(ALL_MODULES.$(m).PATH) with unknown owner \
-        "$(ALL_MODULES.$(m).OWNER)" in product "$(TARGET_PRODUCT)"))\
-    $(if $(ALL_MODULES.$(m).INSTALLED),\
-      $(eval _vendor_module_owner_info += $(patsubst $(PRODUCT_OUT)/%,%,$(ALL_MODULES.$(m).INSTALLED)):$(ALL_MODULES.$(m).OWNER)))))
+#$(foreach m, $(_vendor_check_modules), \
+#  $(if $(filter vendor/%, $(ALL_MODULES.$(m).PATH)),\
+#    $(if $(filter $(_vendor_owner_whitelist), $(ALL_MODULES.$(m).OWNER)),,\
+#      $(error Error: vendor module "$(m)" in $(ALL_MODULES.$(m).PATH) with unknown owner \
+#        "$(ALL_MODULES.$(m).OWNER)" in product "$(TARGET_PRODUCT)"))))
 
-endif
+#endif
 
 
 # Restrict paths
@@ -80,23 +71,5 @@ $(foreach m, $(_vendor_check_modules), \
 
 endif
 
-_vendor_module_owner_info_txt := $(call intermediates-dir-for,PACKAGING,vendor_owner_info)/vendor_owner_info.txt
-$(_vendor_module_owner_info_txt): PRIVATE_INFO := $(_vendor_module_owner_info)
-$(_vendor_module_owner_info_txt):
-	@echo "Write vendor module owner info $@"
-	@mkdir -p $(dir $@) && rm -f $@
-ifdef _vendor_module_owner_info
-	@for w in $(PRIVATE_INFO); \
-	  do \
-	    echo $$w >> $@; \
-	done
-else
-	@echo "No vendor module owner info." > $@
-endif
-
-$(call dist-for-goals, droidcore, $(_vendor_module_owner_info_txt))
-
-_vendor_module_owner_info_txt :=
-_vendor_module_owner_info :=
 _vendor_check_modules :=
 endif
